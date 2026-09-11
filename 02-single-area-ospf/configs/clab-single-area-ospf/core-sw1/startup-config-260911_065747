@@ -1,0 +1,45 @@
+! Startup-config last modified at Fri Sep 11 06:57:47 2026 by root
+! device: core-sw1 (cEOSLab, EOS-4.36.2F-49692818.4362F (engineering build))
+!
+no aaa root
+!
+username admin privilege 15 role network-admin secret sha512 $6$5zWshYNcTASSO9o8$RPgE3PyWIbJRvlR0q/0bVRXDX1KPn8CiRmqh.pHqs6ywtXf0ZvFWyC9u4xusVFYQJQ/n4FATkuzrWcIbLtQkk.
+!
+management api http-commands
+   no shutdown
+!
+no service interface inactive port-id allocation disabled
+!
+service routing protocols model multi-agent
+!
+hostname core-sw1
+!
+spanning-tree mode mstp
+!
+system l1
+   unsupported speed action error
+   unsupported error-correction action error
+!
+management api gnmi
+   transport grpc default
+!
+management api netconf
+   transport ssh default
+!
+interface Ethernet1
+!
+interface Ethernet2
+!
+interface Ethernet3
+!
+interface Management0
+   ip address 172.20.20.4/24
+   ipv6 address 3fff:172:20:20::4/64
+!
+no ip routing
+!
+ip route 0.0.0.0/0 172.20.20.1
+!
+ipv6 route ::/0 3fff:172:20:20::1
+!
+end
