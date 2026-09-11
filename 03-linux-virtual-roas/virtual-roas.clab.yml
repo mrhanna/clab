@@ -1,0 +1,9 @@
+name: virtual-roas
+topology:
+  nodes:
+    linux-host:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - apk add --no-cache iproute2
+        - rm -f /bin/ip
