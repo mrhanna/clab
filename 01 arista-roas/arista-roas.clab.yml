@@ -1,0 +1,35 @@
+name: arista-roas
+
+topology:
+  nodes:
+    pc-vlan10:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - ip link set dev eth1 up
+        - ip addr add 192.168.10.10/24 dev eth1
+        - ip route del default
+        - ip route add default via 192.168.10.1
+
+    pc-vlan20:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - ip link set dev eth1 up
+        - ip addr add 192.168.20.20/24 dev eth1
+        - ip route del default
+        - ip route add default via 192.168.20.1
+
+    sw1:
+      kind: arista_ceos
+      image: ceos:4.36.2F
+
+    r1:
+      kind: arista_ceos
+      image: ceos:4.36.2F
+
+  links:
+    - endpoints: ['pc-vlan10:eth1', 'sw1:eth1']
+    - endpoints: ['pc-vlan20:eth1', 'sw1:eth2']
+
+    - endpoints: ['sw1:eth3', 'r1:eth1']

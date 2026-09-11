@@ -1,0 +1,14 @@
+# Ignore auto-generated Containerlab runtime directories anywhere in the repo
+**/clab-*/
+!**/configs/clab-*/
+
+# Ignore editor and system noise
+.DS_Store
+*.swp
+*~
+
+# Ignore temporary packet capture files if you run tcpdump/Wireshark
+*.pcap
+*.pcapng
+
+

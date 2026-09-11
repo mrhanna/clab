@@ -1,0 +1,86 @@
+{
+  "freeTextAnnotations": [
+    {
+      "id": "freeText_1789101631440",
+      "text": ".10.10",
+      "position": {
+        "x": 419.2435946248079,
+        "y": 372.9504094741255
+      },
+      "fontSize": 14,
+      "fontColor": "#abb2bf",
+      "fontWeight": "normal",
+      "fontStyle": "normal",
+      "textDecoration": "none",
+      "textAlign": "left",
+      "fontFamily": "Arial"
+    },
+    {
+      "id": "freeText_1789101642738",
+      "text": ".20.20",
+      "position": {
+        "x": 573.3340596674275,
+        "y": 372.4267037123294
+      },
+      "fontSize": 14,
+      "fontColor": "#abb2bf",
+      "fontWeight": "normal",
+      "fontStyle": "normal",
+      "textDecoration": "none",
+      "textAlign": "left",
+      "fontFamily": "Arial"
+    },
+    {
+      "id": "freeText_1789101718072",
+      "text": "192.168.10.1/24\n.20.1/24",
+      "position": {
+        "x": 386.6245392892078,
+        "y": 158.56675928082356
+      },
+      "fontSize": 14,
+      "fontColor": "#abb2bf",
+      "fontWeight": "normal",
+      "fontStyle": "normal",
+      "textDecoration": "none",
+      "textAlign": "right",
+      "fontFamily": "Arial"
+    }
+  ],
+  "freeShapeAnnotations": [],
+  "trafficRateAnnotations": [],
+  "groupStyleAnnotations": [],
+  "networkNodeAnnotations": [],
+  "nodeAnnotations": [
+    {
+      "id": "pc-vlan10",
+      "position": {
+        "x": 440,
+        "y": 420
+      }
+    },
+    {
+      "id": "pc-vlan20",
+      "position": {
+        "x": 560,
+        "y": 420
+      }
+    },
+    {
+      "id": "sw1",
+      "position": {
+        "x": 500,
+        "y": 300
+      }
+    },
+    {
+      "id": "r1",
+      "position": {
+        "x": 500,
+        "y": 180
+      }
+    }
+  ],
+  "edgeAnnotations": [],
+  "aliasEndpointAnnotations": [],
+  "viewerSettings": {}
+}
