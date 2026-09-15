@@ -1,0 +1,91 @@
+# Part 3 - IP Addresses, Layer-3 EtherChannel, HSRP
+
+- name: 'Enable IP routing on L3 devices'
+  hosts: 'core_switches:clab-mega-R1'
+  gather_facts: false
+  tasks:
+    - name: 'Enable IP routing'
+      arista.eos.eos_config:
+        lines:
+          - 'ip routing'
+
+- name: 'Setup CSW Port Channel'
+  hosts: 'core_switches'
+  gather_facts: false
+  tasks:
+    - name: 'Bind member ports to Port-Channel'
+      arista.eos.eos_lag_interfaces:
+        config:
+          - name: Port-Channel1
+            members:
+              - member: Ethernet2
+                mode: active
+              - member: Ethernet3
+                mode: active
+        state: merged
+
+- name: 'Setup L3 Interfaces on Router, Core and Distribution Switches'
+  hosts: 'core_switches:all_distribution_switches:clab-mega-R1'
+  gather_facts: false
+  tasks:
+    - name: 'no switchport on L3 interfaces'
+      arista.eos.eos_interfaces:
+        config: '{{ l3_interfaces | map(attribute="name") | select("match", "^Ethernet") | map("community.general.dict_kv", "name") | map("combine", {"mode": "layer3"}) | list }}'
+        state: merged
+      when: l3_interfaces is defined
+
+    - name: 'Assign IP addresses to L3 interfaces'
+      arista.eos.eos_l3_interfaces:
+        config: '{{ l3_interfaces }}'
+        state: merged
+      when: l3_interfaces is defined
+
+- name: 'Setup Management IP on Access Switches and Default Gateway'
+  hosts: 'all_access_switches'
+  gather_facts: false
+  tasks:
+    - name: 'Enable SVI'
+      arista.eos.eos_interfaces:
+        config:
+          - name: Vlan99
+            enabled: true
+        state: merged
+
+    - name: 'Configure Default Gateway'
+      arista.eos.eos_static_routes:
+        config:
+          - address_families:
+              - afi: ipv4
+                routes:
+                  - dest: 0.0.0.0/0
+                    next_hops:
+                      - forward_router_address: '{{ default_gateway }}'
+        state: merged
+
+    - name: 'Assign Management IP address'
+      arista.eos.eos_l3_interfaces:
+        config: '{{ l3_interfaces }}'
+        state: merged
+      when: l3_interfaces is defined
+
+- name: Configure Distribution SVI and VRRP Redundancy
+  hosts: all_distribution_switches
+  gather_facts: false
+  tasks:
+    - name: Apply SVI IP and VRRP Configuration
+      arista.eos.eos_config:
+        parents: 'interface {{ item.svi }}'
+        lines:
+          - 'no shutdown'
+          # Physical IP calculation: VIP + 1 for DSW-1, VIP + 2 for DSW-2
+          - 'ip address {{ item.vip | ansible.utils.ipmath(node_offset | int + 1) }}/{{ item.prefix }}'
+          # VRRP Group & Virtual IP
+          - 'vrrp {{ item.group }} ipv4 {{ item.vip }}'
+          # Active/Backup Priority Allocation
+          - 'vrrp {{ item.group }} priority {{ (inventory_hostname == item.primary_host) | ternary(105, 100) }}'
+          # Enable preemption on Primary host
+          - "{{ (inventory_hostname == item.primary_host) | ternary('vrrp ' ~ item.group ~ ' preempt', 'no vrrp ' ~ item.group ~ ' preempt') }}"
+      loop: '{{ vrrp_svis | default([]) }}'
+      vars:
+        # Determine 0-based host index within the site pair
+        node_offset: '{{ vrrp_nodes.index(inventory_hostname) }}'

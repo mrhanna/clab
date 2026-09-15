@@ -22,6 +22,8 @@ all:
         ansible_network_os: arista.eos.eos
         ansible_become: true
         ansible_become_method: enable
+      hosts:
+        clab-mega-R1:
       children:
         core_switches:
         all_distribution_switches:

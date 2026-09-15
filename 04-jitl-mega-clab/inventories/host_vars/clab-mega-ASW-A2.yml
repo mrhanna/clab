@@ -7,3 +7,8 @@ l2_interfaces:
 voice_vlan:
   - name: Ethernet1
     vlan: 20
+
+l3_interfaces:
+  - name: Vlan99
+    ipv4:
+      - address: 10.0.0.5/28

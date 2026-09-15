@@ -11,3 +11,5 @@ site_vlans:
     name: Unused
 
 allowed_vlans_string: '10,20,40,99'
+
+default_gateway: 10.0.0.1

@@ -1,0 +1,25 @@
+vrrp_nodes:
+  - clab-mega-DSW-B1
+  - clab-mega-DSW-B2
+
+vrrp_svis:
+  - svi: Vlan99
+    group: 1
+    vip: '10.0.0.17'
+    prefix: 28
+    primary_host: 'clab-mega-DSW-B1'
+  - svi: Vlan10
+    group: 2
+    vip: '10.3.0.1'
+    prefix: 24
+    primary_host: 'clab-mega-DSW-B1'
+  - svi: Vlan20
+    group: 3
+    vip: '10.4.0.1'
+    prefix: 24
+    primary_host: 'clab-mega-DSW-B2'
+  - svi: Vlan30
+    group: 4
+    vip: '10.5.0.1'
+    prefix: 24
+    primary_host: 'clab-mega-DSW-B2'

@@ -1,0 +1,4 @@
+l3_interfaces:
+  - name: Vlan99
+    ipv4:
+      - address: 10.0.0.4/28

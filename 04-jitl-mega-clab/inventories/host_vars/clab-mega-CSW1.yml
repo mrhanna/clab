@@ -1,0 +1,22 @@
+l3_interfaces:
+  - name: Ethernet1
+    ipv4:
+      - address: 10.0.0.34/30
+  - name: Ethernet4
+    ipv4:
+      - address: 10.0.0.45/30
+  - name: Ethernet5
+    ipv4:
+      - address: 10.0.0.49/30
+  - name: Ethernet6
+    ipv4:
+      - address: 10.0.0.53/30
+  - name: Ethernet7
+    ipv4:
+      - address: 10.0.0.57/30
+  - name: Port-Channel-1
+    ipv4:
+      - address: 10.0.0.41/30
+  - name: Loopback0
+    ipv4:
+      - address: 10.0.0.77/32
