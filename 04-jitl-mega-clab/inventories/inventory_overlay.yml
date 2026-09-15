@@ -1,0 +1,28 @@
+all:
+  children:
+    all_distribution_switches:
+      children:
+        distribution_siteA:
+        distribution_siteB:
+    all_access_switches:
+      children:
+        access_siteA:
+        access_siteB:
+    switches_siteA:
+      children:
+        access_siteA:
+        distribution_siteA:
+    switches_siteB:
+      children:
+        access_siteB:
+        distribution_siteB:
+    all_routers_switches:
+      vars:
+        ansible_connection: ansible.netcommon.network_cli
+        ansible_network_os: arista.eos.eos
+        ansible_become: true
+        ansible_become_method: enable
+      children:
+        core_switches:
+        all_distribution_switches:
+        all_access_switches:

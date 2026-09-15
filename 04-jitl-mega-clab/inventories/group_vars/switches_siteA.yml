@@ -1,0 +1,13 @@
+site_vlans:
+  - vlan_id: 10
+    name: PCs
+  - vlan_id: 20
+    name: Phones
+  - vlan_id: 40
+    name: Wi-Fi
+  - vlan_id: 99
+    name: Management
+  - vlan_id: 1000
+    name: Unused
+
+allowed_vlans_string: '10,20,40,99'

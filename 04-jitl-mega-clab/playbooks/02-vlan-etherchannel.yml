@@ -1,0 +1,79 @@
+# Part 2 - VLANs, Layer-2 Ether Channel
+
+- name: 'VLAN Config'
+  hosts: 'all_distribution_switches:all_access_switches'
+  gather_facts: false
+  tasks:
+    - name: 'Configure VLANs on Access and Distribution Switches'
+      arista.eos.eos_vlans:
+        config: '{{ site_vlans }}'
+        state: merged
+      when: site_vlans is defined
+
+- name: 'Configure Layer-2 EtherChannel on Distribution Switches'
+  hosts: all_distribution_switches
+  gather_facts: false
+  tasks:
+    - name: Bind member ports to Port-Channel
+      arista.eos.eos_lag_interfaces:
+        config:
+          - name: Port-Channel1
+            members:
+              - member: Ethernet4
+                mode: active
+              - member: Ethernet5
+                mode: active
+        state: merged
+
+- name: 'Configure Distribution Trunks'
+  hosts: all_distribution_switches
+  gather_facts: false
+  tasks:
+    - name: 'Configure Distribution Trunks'
+      arista.eos.eos_l2_interfaces:
+        config: >-
+          {{
+            ['Ethernet1', 'Ethernet2', 'Ethernet3', 'Port-Channel1']
+            | map('community.general.dict_kv', 'name') 
+            | map('combine', {
+              'mode': 'trunk',
+              'trunk': {
+                'trunk_allowed_vlans': allowed_trunks,
+                'native_vlan': 1000
+              }
+            }) | list
+          }}
+        state: merged
+      vars:
+        allowed_trunks: "{{ site_vlans | map(attribute='vlan_id') | map('string') | reject('eq', '1000') | list }}"
+
+- name: 'Configure Access Switch Ports'
+  hosts: all_access_switches
+  gather_facts: false
+  tasks:
+    - name: 'Configure Access Ports'
+      arista.eos.eos_l2_interfaces:
+        config: '{{ (l2_interfaces | default([])) + default_trunks }}'
+        state: merged
+      vars:
+        allowed_trunks: "{{ site_vlans | map(attribute='vlan_id') | map('string') | reject('eq', '1000') | list }}"
+        default_trunks:
+          - name: Ethernet3
+            mode: trunk
+            trunk:
+              trunk_allowed_vlans: '{{ allowed_trunks }}'
+              native_vlan: 1000
+          - name: Ethernet4
+            mode: trunk
+            trunk:
+              trunk_allowed_vlans: '{{ allowed_trunks }}'
+              native_vlan: 1000
+
+    - name: 'Configure Voice VLANs on Access Ports'
+      ansible.netcommon.cli_config:
+        config: |
+          {% for voice in voice_vlan %}
+          interface {{ voice.name }}
+            switchport phone vlan {{ voice.vlan }}
+          {% endfor %}
+      when: voice_vlan is defined

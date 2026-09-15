@@ -1,0 +1,153 @@
+name: mega
+
+topology:
+  defaults:
+    kind: arista_ceos
+    image: ceos:4.36.2F
+
+  nodes:
+    R1: {}
+
+    CSW1:
+      labels:
+        ansible-group: core_switches
+
+    CSW2:
+      labels:
+        ansible-group: core_switches
+
+    DSW-A1:
+      labels:
+        ansible-group: distribution_siteA
+    DSW-A2:
+      labels:
+        ansible-group: distribution_siteA
+    DSW-B1:
+      labels:
+        ansible-group: distribution_siteB
+    DSW-B2:
+      labels:
+        ansible-group: distribution_siteB
+
+    ASW-A1:
+      labels:
+        ansible-group: access_siteA
+    ASW-A2:
+      labels:
+        ansible-group: access_siteA
+    ASW-A3:
+      labels:
+        ansible-group: access_siteA
+    ASW-B1:
+      labels:
+        ansible-group: access_siteB
+    ASW-B2:
+      labels:
+        ansible-group: access_siteB
+    ASW-B3:
+      labels:
+        ansible-group: access_siteB
+
+    Phone1:
+      kind: linux
+      image: alpine:latest
+      binds:
+        - phone-init.sh:/usr/local/bin/init-phone.sh:ro
+      exec:
+        - apk add --no-cache lldpd iproute2 dhcpcd bash
+        - rm -f /bin/ip
+        - chmod +x /usr/local/bin/init-phone.sh
+        - /usr/local/bin/init-phone.sh
+    Phone2:
+      kind: linux
+      image: alpine:latest
+      binds:
+        - phone-init.sh:/usr/local/bin/init-phone.sh:ro
+      exec:
+        - apk add --no-cache lldpd iproute2 dhcpcd bash
+        - rm -f /bin/ip
+        - chmod +x /usr/local/bin/init-phone.sh
+        - /usr/local/bin/init-phone.sh
+    Phone3:
+      kind: linux
+      image: alpine:latest
+      binds:
+        - phone-init.sh:/usr/local/bin/init-phone.sh:ro
+      exec:
+        - apk add --no-cache lldpd iproute2 dhcpcd bash
+        - rm -f /bin/ip
+        - chmod +x /usr/local/bin/init-phone.sh
+        - /usr/local/bin/init-phone.sh
+
+    PC1:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - apk add --no-cache iproute2 dhcpcd
+        - rm -f /bin/ip
+    PC2:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - apk add --no-cache iproute2 dhcpcd bash
+        - rm -f /bin/ip
+    PC3:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - apk add --no-cache iproute2 dhcpcd bash
+        - rm -f /bin/ip
+    SRV1:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - apk add --no-cache iproute2 dhcpcd bash
+        - rm -f /bin/ip
+
+  links:
+    # Router to cores
+    - endpoints: ['R1:eth1', 'CSW1:eth1']
+    - endpoints: ['R1:eth2', 'CSW2:eth1']
+
+    #Core to core
+    - endpoints: ['CSW1:eth2', 'CSW2:eth2']
+    - endpoints: ['CSW1:eth3', 'CSW2:eth3']
+
+    # Core to distribution
+    - endpoints: ['CSW1:eth4', 'DSW-A1:eth6']
+    - endpoints: ['CSW1:eth5', 'DSW-A2:eth6']
+    - endpoints: ['CSW1:eth6', 'DSW-B1:eth6']
+    - endpoints: ['CSW1:eth7', 'DSW-B2:eth6']
+    - endpoints: ['CSW2:eth4', 'DSW-A1:eth7']
+    - endpoints: ['CSW2:eth5', 'DSW-A2:eth7']
+    - endpoints: ['CSW2:eth6', 'DSW-B1:eth7']
+    - endpoints: ['CSW2:eth7', 'DSW-B2:eth7']
+
+    # Distribution to distribution
+    - endpoints: ['DSW-A1:eth4', 'DSW-A2:eth4']
+    - endpoints: ['DSW-A1:eth5', 'DSW-A2:eth5']
+    - endpoints: ['DSW-B1:eth4', 'DSW-B2:eth4']
+    - endpoints: ['DSW-B1:eth5', 'DSW-B2:eth5']
+
+    # Distribution to access
+    - endpoints: ['DSW-A1:eth1', 'ASW-A1:eth3']
+    - endpoints: ['DSW-A1:eth2', 'ASW-A2:eth3']
+    - endpoints: ['DSW-A1:eth3', 'ASW-A3:eth3']
+    - endpoints: ['DSW-A2:eth1', 'ASW-A1:eth4']
+    - endpoints: ['DSW-A2:eth2', 'ASW-A2:eth4']
+    - endpoints: ['DSW-A2:eth3', 'ASW-A3:eth4']
+    - endpoints: ['DSW-B1:eth1', 'ASW-B1:eth3']
+    - endpoints: ['DSW-B1:eth2', 'ASW-B2:eth3']
+    - endpoints: ['DSW-B1:eth3', 'ASW-B3:eth3']
+    - endpoints: ['DSW-B2:eth1', 'ASW-B1:eth4']
+    - endpoints: ['DSW-B2:eth2', 'ASW-B2:eth4']
+    - endpoints: ['DSW-B2:eth3', 'ASW-B3:eth4']
+
+    # Access to hosts
+    - endpoints: ['ASW-A2:eth1', 'Phone1:eth1']
+    - endpoints: ['Phone1:eth2', 'PC1:eth1']
+    - endpoints: ['ASW-A3:eth1', 'Phone2:eth1']
+    - endpoints: ['Phone2:eth2', 'PC2:eth1']
+    - endpoints: ['ASW-B2:eth1', 'Phone3:eth1']
+    - endpoints: ['Phone3:eth2', 'PC3:eth1']
+    - endpoints: ['ASW-B3:eth1', 'SRV1:eth1']

@@ -1,0 +1,5 @@
+l2_interfaces:
+  - name: Ethernet1
+    mode: access
+    access:
+      vlan: 30
