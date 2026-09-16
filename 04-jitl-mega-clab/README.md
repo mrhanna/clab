@@ -25,16 +25,13 @@ I have used this lab setup as a crash course in Ansible.
 - Since PAgP isn't available, I used LACP for both distribution layer port-channels. DTP and VTP aren't in play, either; DTP-related instructions are ignored, and VLANs are pushed to all distribution- and access-layer switches with Ansible instead.
 - AFAIK, "voice" VLANs ("phone" VLANs in EOS) are not available in Ansible resource modules, so the voice VLANs on the appropriate ports of E1 on ASW-A2, -A3, and -B2 are declared separately in their respective host_vars files, and attached in a separate, imperative CLI-coded task. (In general I've tried to write my playbooks declaratively with resource modules)
 
-### Part 3 – IP Addresses, Layer-3 EtherChannel, HSRP
+### Part 3 - IP Addresses, Layer-3 EtherChannel, HSRP
 
 - Used LACP again instead of PAgP, and used VRRP instead of HSRP for my FHRP.
 - Set VRRP IPs algorithmically.
 - SRV1's net configuration will go in containerlab instead of Ansible
 
-## Log
+### Part 4 - Rapid Spanning Tree Protocol
 
-**9/11/2026** - I'll use an cEOS image to keep it more lightweight. I'm not sure yet what I'm going to do for the IP phones and WLC/LWAP; maybe I'll mock them with Alpine containers?
-
-[x] Reproduced most of the physical topology in containerlab. (Skipped WLC and LWAPs for now)
-
-**9/14/2026** - Did some first work with Ansible, including a first Ansible playbook. I think I will make one playbook per original Packet Tracer step.
+- Since PVST+ is Cisco proprietary, I used MSTP instead.
+- Although this is the shortest and simplest step in the lab (only asking us to configure STP and enable PortFast/BPDUGuard), I thought it would be an interesting exercise to have the STP configuration play ingest the FHRP configuration from the last step and mirror the STP configuration accordingly. Since STP and FHRPs normally ought to be configured alike, I suppose it makes sense to do this with a SSOT.

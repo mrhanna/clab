@@ -1,0 +1,22 @@
+spanning-tree mode mst
+spanning-tree mst configuration
+  name {{ site_name }}
+  revision 1
+{% for node in vrrp_nodes %}
+  {% set instance_id = loop.index %}
+  {% set node_vlans = [] %}
+  {% for svi in vrrp_svis if svi.primary_host == node %}
+    {% set _ = node_vlans.append(svi.svi | regex_replace('[^0-9]', '')) %}
+  {% endfor %}
+  {% if node_vlans %}
+  instance {{ instance_id }} vlan {{ node_vlans | join(',') }}
+  {% endif %}
+{% endfor %}
+
+{% if inventory_hostname in vrrp_nodes %}
+{% for node in vrrp_nodes %}
+  {% set instance_id = loop.index %}
+  {% set priority = 0 if node == inventory_hostname else 4096 %}
+spanning-tree mst {{ instance_id }} priority {{ priority }}
+{% endfor %}
+{% endif %}

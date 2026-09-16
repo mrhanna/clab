@@ -1,0 +1,27 @@
+# Part 4 - Rapid Spanning Tree Protocol
+
+- name: 'Setup MSTP on distribution and access switches'
+  hosts: 'all_distribution_switches:all_access_switches'
+  gather_facts: false
+  tasks:
+    - name: 'Enable MSTP'
+      arista.eos.eos_config:
+        lines: "{{ lookup('template', 'templates/mstp.j2').splitlines() }}"
+
+- name: 'Setup portfast and bpduguard on access switch ports'
+  hosts: 'all_access_switches'
+  gather_facts: false
+  tasks:
+    - name: Apply spanning-tree portfast to access ports
+      arista.eos.eos_config:
+        lines:
+          - 'spanning-tree portfast'
+        parents: 'interface {{ item.name }}'
+      loop: '{{ l2_interfaces }}'
+      when:
+        - item.mode is defined
+        - item.mode == 'access'
+    - name: 'Enable bpduguard on access switch ports'
+      arista.eos.eos_config:
+        lines:
+          - 'spanning-tree edge-port bpduguard default'
