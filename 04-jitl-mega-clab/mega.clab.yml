@@ -103,6 +103,8 @@ topology:
       exec:
         - apk add --no-cache iproute2 dhcpcd bash
         - rm -f /bin/ip
+        - ip address add 10.5.0.4/24 dev eth1
+        - ip route add default via 10.5.0.1 metric 10
 
   links:
     # Router to cores

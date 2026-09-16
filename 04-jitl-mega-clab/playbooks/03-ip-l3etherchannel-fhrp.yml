@@ -1,7 +1,7 @@
 # Part 3 - IP Addresses, Layer-3 EtherChannel, HSRP
 
 - name: 'Enable IP routing on L3 devices'
-  hosts: 'core_switches:clab-mega-R1'
+  hosts: 'core_switches:clab-mega-R1:all_distribution_switches'
   gather_facts: false
   tasks:
     - name: 'Enable IP routing'
