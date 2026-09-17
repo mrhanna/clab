@@ -14,7 +14,7 @@ l3_interfaces:
   - name: Ethernet7
     ipv4:
       - address: 10.0.0.73/30
-  - name: Port-Channel-1
+  - name: Port-Channel1
     ipv4:
       - address: 10.0.0.42/30
   - name: Loopback0

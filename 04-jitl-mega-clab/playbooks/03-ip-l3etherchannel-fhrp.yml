@@ -30,7 +30,7 @@
   tasks:
     - name: 'no switchport on L3 interfaces'
       arista.eos.eos_interfaces:
-        config: '{{ l3_interfaces | map(attribute="name") | select("match", "^Ethernet") | map("community.general.dict_kv", "name") | map("combine", {"mode": "layer3"}) | list }}'
+        config: '{{ l3_interfaces | map(attribute="name") | reject("match", "^Loopback") | map("community.general.dict_kv", "name") | map("combine", {"mode": "layer3"}) | list }}'
         state: merged
       when: l3_interfaces is defined
 
