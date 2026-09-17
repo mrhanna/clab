@@ -1,0 +1,17 @@
+
+{% set loopback_ip = ((l3_interfaces | selectattr('name', 'equalto', 'Loopback0') | first).ipv4 | first).address | regex_replace('/.*', '') %}
+  router-id {{ loopback_ip }}
+  network {{ loopback_ip }} 0.0.0.0 area 0
+  passive-interface Loopback0 
+
+{% for iface in l3_interfaces | default([]) | selectattr('name', 'ne', 'Loopback0') %}
+  network {{ (iface.ipv4 | first).address | regex_replace('/.*', '') }} 0.0.0.0 area 0
+{% endfor %}
+
+{% for svi in vrrp_svis | default([]) %}
+  {% set wildcard_mask = (svi.vip ~ '/' ~ svi.prefix) | ansible.utils.ipaddr('wildcard') %}
+  network {{ svi.vip }} {{ wildcard_mask }} area 0
+  {% if svi.svi != 'Vlan99' %}
+  passive-interface {{ svi.svi }}
+  {% endif %}
+{% endfor %}

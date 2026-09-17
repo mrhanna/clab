@@ -1,0 +1,20 @@
+# Part 5 - Static and Dynamic Routing
+
+- name: 'Configure OSPF on R1 and all Core and Distribution switches'
+  hosts: 'core_switches:clab-mega-R1:all_distribution_switches'
+  gather_facts: false
+  tasks:
+    - name: 'Configure router ospf 1 block'
+      arista.eos.eos_config:
+        lines: "{{ lookup('template', 'templates/ospf.j2').splitlines() }}"
+        parents:
+          - 'router ospf 1'
+    - name: 'Configure OSPF network type point-to-point on all L3 interfaces'
+      arista.eos.eos_config:
+        lines:
+          - 'ip ospf network point-to-point'
+        parents:
+          - 'interface {{ item.name }}'
+      loop:
+        "{{ (l3_interfaces | default([]) | selectattr('name', 'ne', 'Loopback0') | list) +
+        ([{'name': 'Vlan99'}] if inventory_hostname in groups['all_distribution_switches'] else []) }}"

@@ -6,7 +6,7 @@ I have used this lab setup as a crash course in Ansible.
 
 ![Topology Diagram](diagram.png)
 
-## Deviations from Instructions
+## Implementation Notes and Deviations from Instructions
 
 ### containerlab setup
 
@@ -35,3 +35,9 @@ I have used this lab setup as a crash course in Ansible.
 
 - Since PVST+ is Cisco proprietary, I used MSTP instead.
 - Although this is the shortest and simplest step in the lab (only asking us to configure STP and enable PortFast/BPDUGuard), I thought it would be an interesting exercise to have the STP configuration play ingest the FHRP configuration from the last step and mirror the STP configuration accordingly. Since STP and FHRPs normally ought to be configured alike, I suppose it makes sense to do this with a SSOT.
+
+### Part 5 - Static and Dynamic Routing
+
+- I didn't bother adding R1's OSPF interface from `config-if`; I just pushed the same template issuing `network` commands to all the OSPF-aware devices.
+- Since the DSW SVI IPs aren't statically written down anywhere, I cheated a bit and used the FHRP VIP + corresponding wildcard mask to add those interfaces to OSPF where needed. For lab purposes, this should be fine - each device only has one real interface/IP in the corresponding subnet, so there shouldn't be any unexpected overlap. And this seemed better than regenerating those IPs on the fly; even though those IPs are generated deterministically and it should work, it's just extra unnecessary computation that would carry some risk of getting "out of sync" with the IPs generated in the Part 3 playbook (however unlikely for lab purposes). (I suppose IRL it would be better to use NetBox or a more rigid schema for your SSOT to keep everything in sync and provide different forms of the same data to different plays.)
+- For now, I skipped the default route/ASBR setup on R1; I might add a node representing the Internet later.
