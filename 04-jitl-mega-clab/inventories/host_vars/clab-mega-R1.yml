@@ -5,6 +5,12 @@ l3_interfaces:
   - name: Ethernet2
     ipv4:
       - address: 10.0.0.37/30
+  - name: Ethernet3
+    ipv4:
+      - address: dhcp
   - name: Loopback0
     ipv4:
       - address: 10.0.0.76/32
+
+ospf_exclude:
+  - Ethernet3

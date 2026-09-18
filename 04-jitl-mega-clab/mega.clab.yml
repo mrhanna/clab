@@ -6,7 +6,9 @@ topology:
     image: ceos:4.36.2F
 
   nodes:
-    R1: {}
+    R1:
+      security-opts:
+        - apparmor=unconfined
 
     CSW1:
       labels:
@@ -52,30 +54,24 @@ topology:
       kind: linux
       image: alpine:latest
       binds:
-        - phone-init.sh:/usr/local/bin/init-phone.sh:ro
+        - init-scripts/phone-init.sh:/usr/local/bin/init-phone.sh:ro
       exec:
-        - apk add --no-cache lldpd iproute2 dhcpcd bash
-        - rm -f /bin/ip
         - chmod +x /usr/local/bin/init-phone.sh
         - /usr/local/bin/init-phone.sh
     Phone2:
       kind: linux
       image: alpine:latest
       binds:
-        - phone-init.sh:/usr/local/bin/init-phone.sh:ro
+        - init-scripts/phone-init.sh:/usr/local/bin/init-phone.sh:ro
       exec:
-        - apk add --no-cache lldpd iproute2 dhcpcd bash
-        - rm -f /bin/ip
         - chmod +x /usr/local/bin/init-phone.sh
         - /usr/local/bin/init-phone.sh
     Phone3:
       kind: linux
       image: alpine:latest
       binds:
-        - phone-init.sh:/usr/local/bin/init-phone.sh:ro
+        - init-scripts/phone-init.sh:/usr/local/bin/init-phone.sh:ro
       exec:
-        - apk add --no-cache lldpd iproute2 dhcpcd bash
-        - rm -f /bin/ip
         - chmod +x /usr/local/bin/init-phone.sh
         - /usr/local/bin/init-phone.sh
 
@@ -100,13 +96,25 @@ topology:
     SRV1:
       kind: linux
       image: alpine:latest
+      binds:
+        - init-scripts/srv1.sh:/usr/local/bin/srv1.sh:ro
       exec:
-        - apk add --no-cache iproute2 dhcpcd bash
-        - rm -f /bin/ip
-        - ip address add 10.5.0.4/24 dev eth1
-        - ip route add default via 10.5.0.1 metric 10
+        - chmod +x /usr/local/bin/srv1.sh
+        - /usr/local/bin/srv1.sh
+
+    INTERNET:
+      kind: linux
+      image: alpine:latest
+      binds:
+        - init-scripts/internet.sh:/usr/local/bin/internet.sh:ro
+      exec:
+        - chmod +x /usr/local/bin/internet.sh
+        - /usr/local/bin/internet.sh
 
   links:
+    # Router to Internet
+    - endpoints: ['R1:eth3', 'INTERNET:eth1']
+
     # Router to cores
     - endpoints: ['R1:eth1', 'CSW1:eth1']
     - endpoints: ['R1:eth2', 'CSW2:eth1']

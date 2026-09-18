@@ -16,5 +16,5 @@
         parents:
           - 'interface {{ item.name }}'
       loop:
-        "{{ (l3_interfaces | default([]) | selectattr('name', 'ne', 'Loopback0') | list) +
+        "{{ (l3_interfaces | default([]) | selectattr('name', 'ne', 'Loopback0') | rejectattr('name', 'in', ospf_exclude | default([])) | list) +
         ([{'name': 'Vlan99'}] if inventory_hostname in groups['all_distribution_switches'] else []) }}"

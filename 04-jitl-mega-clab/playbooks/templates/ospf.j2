@@ -1,10 +1,11 @@
 
-{% set loopback_ip = ((l3_interfaces | selectattr('name', 'equalto', 'Loopback0') | first).ipv4 | first).address | regex_replace('/.*', '') %}
+
+{% set loopback_ip = ((l3_interfaces | selectattr('name', 'equalto', 'Loopback0') | rejectattr('name', 'in', ospf_exclude | default([])) | first).ipv4 | first).address | regex_replace('/.*', '') %}
   router-id {{ loopback_ip }}
   network {{ loopback_ip }} 0.0.0.0 area 0
   passive-interface Loopback0 
 
-{% for iface in l3_interfaces | default([]) | selectattr('name', 'ne', 'Loopback0') %}
+{% for iface in l3_interfaces | default([]) | selectattr('name', 'ne', 'Loopback0') | rejectattr('name', 'in', ospf_exclude | default([])) %}
   network {{ (iface.ipv4 | first).address | regex_replace('/.*', '') }} 0.0.0.0 area 0
 {% endfor %}
 

@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/bin/sh
+apk add --no-cache lldpd iproute2 dhcpcd
+rm -f /bin/ip
+
 ip link set eth1 up
 ip link set eth2 up
         
