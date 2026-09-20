@@ -7,8 +7,8 @@ topology:
 
   nodes:
     R1:
-      security-opts:
-        - apparmor=unconfined
+      kind: cisco_vios
+      image: vrnetlab/cisco_vios:156-2.T
 
     CSW1:
       labels:

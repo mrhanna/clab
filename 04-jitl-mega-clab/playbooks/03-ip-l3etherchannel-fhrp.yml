@@ -1,7 +1,7 @@
 # Part 3 - IP Addresses, Layer-3 EtherChannel, HSRP
 
 - name: 'Enable IP routing on L3 devices'
-  hosts: 'core_switches:clab-mega-R1:all_distribution_switches'
+  hosts: 'core_switches:all_distribution_switches'
   gather_facts: false
   tasks:
     - name: 'Enable IP routing'
@@ -24,6 +24,21 @@
                 mode: active
         state: merged
 
+- name: 'Remove clab default route in management subnet'
+  hosts: 'all_routers_switches:!clab-mega-R1'
+  gather_facts: false
+  tasks:
+    - name: 'Delete any default route in management subnet'
+      arista.eos.eos_static_routes:
+        config:
+          - address_families:
+              - afi: ipv4
+                routes:
+                  - dest: 0.0.0.0/0
+                    next_hops:
+                      - forward_router_address: '172.20.20.1'
+        state: deleted
+
 - name: 'Setup L3 Interfaces on Router, Core and Distribution Switches'
   hosts: 'core_switches:all_distribution_switches:clab-mega-R1'
   gather_facts: false
@@ -32,13 +47,31 @@
       arista.eos.eos_interfaces:
         config: '{{ l3_interfaces | map(attribute="name") | reject("match", "^Loopback") | map("community.general.dict_kv", "name") | map("combine", {"mode": "layer3"}) | list }}'
         state: merged
-      when: l3_interfaces is defined
+      when: l3_interfaces is defined and ansible_network_os == "arista.eos.eos"
 
     - name: 'Assign IP addresses to L3 interfaces'
       arista.eos.eos_l3_interfaces:
         config: '{{ l3_interfaces }}'
         state: merged
-      when: l3_interfaces is defined
+      when: l3_interfaces is defined and ansible_network_os == "arista.eos.eos"
+
+    - name: 'Assign IP addresses to L3 interfaces'
+      cisco.ios.ios_l3_interfaces:
+        config: '{{ l3_interfaces }}'
+        state: merged
+      when: l3_interfaces is defined and ansible_network_os == "cisco.ios.ios"
+
+- name: 'no shutdown l3 interfaces on R1'
+  hosts: 'clab-mega-R1'
+  gather_facts: false
+  tasks:
+    - name: 'no shutdown l3 interfaces on R1'
+      cisco.ios.ios_config:
+        lines:
+          - 'no shutdown'
+        parents:
+          - 'interface {{ item.name }}'
+      loop: '{{ l3_interfaces | default([]) | rejectattr("name", "match", "^Loopback") | list }}'
 
 - name: 'Setup Management IP on Access Switches and Default Gateway'
   hosts: 'all_access_switches'

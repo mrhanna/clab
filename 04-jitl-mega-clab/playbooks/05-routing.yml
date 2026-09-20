@@ -1,7 +1,7 @@
 # Part 5 - Static and Dynamic Routing
 
-- name: 'Configure OSPF on R1 and all Core and Distribution switches'
-  hosts: 'core_switches:clab-mega-R1:all_distribution_switches'
+- name: 'Configure OSPF on R1 and all Core and Distribution (Arista) switches'
+  hosts: 'core_switches:all_distribution_switches'
   gather_facts: false
   tasks:
     - name: 'Configure router ospf 1 block'
@@ -18,3 +18,28 @@
       loop:
         "{{ (l3_interfaces | default([]) | selectattr('name', 'ne', 'Loopback0') | rejectattr('name', 'in', ospf_exclude | default([])) | list) +
         ([{'name': 'Vlan99'}] if inventory_hostname in groups['all_distribution_switches'] else []) }}"
+
+- name: 'Configure OSPF on R1, and default route and advertise over OSPF'
+  hosts: clab-mega-R1
+  gather_facts: false
+  tasks:
+    - name: 'Configure router ospf 1 block'
+      cisco.ios.ios_config:
+        lines: "{{ lookup('template', 'templates/ospf.j2').splitlines() }}"
+        parents:
+          - 'router ospf 1'
+      
+    - name: 'Configure OSPF network type point-to-point on all L3 interfaces'
+      cisco.ios.ios_config:
+        lines:
+          - 'ip ospf network point-to-point'
+        parents:
+          - 'interface {{ item }}'
+      loop: ["GigabitEthernet0/1", "GigabitEthernet0/2"]
+
+    - name: 'advertise default route over OSPF'
+      cisco.ios.ios_config:
+        lines:
+          - 'default-information originate'
+        parents:
+          - 'router ospf 1'

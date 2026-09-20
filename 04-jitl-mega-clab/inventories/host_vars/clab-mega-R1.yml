@@ -1,11 +1,11 @@
 l3_interfaces:
-  - name: Ethernet1
+  - name: GigabitEthernet0/1
     ipv4:
       - address: 10.0.0.33/30
-  - name: Ethernet2
+  - name: GigabitEthernet0/2
     ipv4:
       - address: 10.0.0.37/30
-  - name: Ethernet3
+  - name: GigabitEthernet0/3
     ipv4:
       - address: dhcp
   - name: Loopback0
@@ -13,4 +13,16 @@ l3_interfaces:
       - address: 10.0.0.76/32
 
 ospf_exclude:
-  - Ethernet3
+  - GigabitEthernet0/3
+
+ansible_connection: ansible.netcommon.network_cli
+ansible_network_os: cisco.ios.ios
+ansible_become: true
+ansible_become_method: enable
+
+ansible_libssh_kex:
+  - diffie-hellman-group14-sha1
+  - diffie-hellman-group-exchange-sha1
+
+ansible_libssh_hostkey:
+  - ssh-rsa

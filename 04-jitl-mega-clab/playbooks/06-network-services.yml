@@ -1,0 +1,212 @@
+# Part 6 - Network Services: DHCP, DNS, NTP, SNMP, Syslog, FTP, SSH, NAT
+
+- name: Setup DHCP Pools
+  hosts: clab-mega-R1
+  gather_facts: false
+  vars:
+    dhcp_pools:
+      - network: 10.0.0.0/28
+        name: 'A-Mgmt'
+      - network: 10.1.0.0/24
+        name: 'A-PC'
+      - network: 10.2.0.0/24
+        name: 'A-Phone'
+      - network: 10.0.0.16/28
+        name: 'B-Mgmt'
+      - network: 10.3.0.0/24
+        name: 'B-PC'
+      - network: 10.4.0.0/24
+        name: 'B-Phone'
+      - network: 10.6.0.0/24
+        name: 'Wi-Fi'
+  tasks:
+    - name: 'Exclude first 10 addresses from DHCP pools'
+      cisco.ios.ios_config:
+        lines:
+          - "ip dhcp excluded-address {{ item.network | ansible.utils.nthhost(1) }} {{ item.network | ansible.utils.nthhost(10) }}"
+      loop: "{{ dhcp_pools }}"
+  
+    - name: Configure DHCP pools
+      cisco.ios.ios_config:
+        lines:
+          - "network {{ item.network | ansible.utils.ipaddr('network') }} {{ item.network | ansible.utils.ipaddr('netmask') }}"
+          - "default-router {{ item.network | ansible.utils.nthhost(1) }}"
+          - "dns-server {{ globals.dns_server }}"
+        parents:
+          - "ip dhcp pool {{ item.name }}"
+      loop: "{{ dhcp_pools }}"
+
+- name: 'Configure helper-address on DSWs'
+  hosts: all_distribution_switches
+  gather_facts: false
+  tasks:
+    - name: 'Configure helper-address on DSWs'
+      arista.eos.eos_config: 
+        lines:
+          - "ip helper-address {{ globals.dhcp_server }}"
+        parents:
+          - "interface {{ item.svi }}"
+      loop: "{{ vrrp_svis }}"
+
+- name: 'Configure all Arista devices to use global DNS and DHCP'
+  hosts: all_arista
+  gather_facts: false
+  tasks:
+    - name: 'Configure global DNS and domain name'
+      arista.eos.eos_config:
+        lines:
+          - "ip name-server {{ globals.dns_server }}"
+          - "dns domain jeremysitlab.com"
+
+- name: 'Configure R1 to use global DNS and DHCP'
+  hosts: clab-mega-R1
+  gather_facts: false
+  tasks:
+    - name: 'Configure global DNS and domain name'
+      cisco.ios.ios_config:
+        lines:
+          - "ip name-server {{ globals.dns_server }}"
+          - "ip domain name jeremysitlab.com"
+
+- name: 'Configure NTP on R1'
+  hosts: clab-mega-R1
+  gather_facts: false
+  tasks:
+    - name: 'Configure NTP server on R1'
+      cisco.ios.ios_ntp_global:
+        state: merged
+        config:
+          master:
+            enabled: true
+            stratum: 5
+          servers:
+            - server: 216.239.35.0
+          authentication_keys:
+            - id: 1
+              algorithm: "md5"
+              key: "cisco"
+          trusted_keys:
+            - range_start: 1
+              range_end: 1
+
+- name: 'Configure NTP on all devices'
+  hosts: "all_arista"
+  gather_facts: false
+  tasks:
+    - name: 'Configure NTP server on all devices'
+      arista.eos.eos_ntp_global:
+        state: merged
+        config:
+          servers:
+            - server: "{{ globals.ntp_server }}"
+          authentication_keys:
+            - id: 1
+              algorithm: "md5"
+              encryption: 0
+              key: "cisco"
+          authenticate:
+            enable: true
+
+- name: 'Configure Syslog on all routers and switches'
+  hosts: all_routers_switches
+  gather_facts: false
+  vars:
+    config:
+      buffered:
+        buffer_size: 8192
+        severity: informational
+      hosts:
+        - name: "{{ globals.syslog_server }}"
+          protocol: udp
+          port: 514
+      level:
+        severity: informational
+  tasks:
+    - name: 'Configure Syslog server on Arista devices'
+      arista.eos.eos_logging_global:
+        config:
+          buffered:
+            buffer_size: 8192
+            severity: informational
+          hosts:
+            - name: "{{ globals.syslog_server }}"
+              protocol: udp
+              port: 514
+          level:
+            severity: informational
+        state: merged
+      when: ansible_network_os == "arista.eos.eos"
+
+    - name: 'Configure Syslog server on Cisco devices'
+      cisco.ios.ios_logging_global:
+        config:
+          buffered:
+            size: 8192
+            severity: informational
+          hosts:
+            - host: "{{ globals.syslog_server }}"
+          trap: informational
+        state: merged
+      when: ansible_network_os == "cisco.ios.ios" 
+
+- name: 'Configure SNMP on all routers and switches'
+  hosts: all_routers_switches
+  gather_facts: false
+  vars:
+    config:
+      communities:
+        - name: SNMPSTRING
+          ro: true
+          rw: false
+  tasks:
+    - name: 'Configure SNMP server on Arista devices'
+      arista.eos.eos_snmp_server: 
+        config: "{{ config }}"
+        state: merged
+      when: ansible_network_os == "arista.eos.eos"
+    
+    - name: 'Configure SNMP server on Cisco devices'
+      cisco.ios.ios_snmp_server: 
+        config: "{{ config }}"
+        state: merged
+      when: ansible_network_os == "cisco.ios.ios"
+
+- name: 'Configure NAT on R1'
+  hosts: clab-mega-R1
+  gather_facts: false
+  tasks:
+    - name: 'Configure ACL for PAT'
+      cisco.ios.ios_config:
+        parents:
+          - "ip access-list standard 2"
+        lines:
+          - "permit 10.1.0.0 0.0.0.255"
+          - "permit 10.2.0.0 0.0.0.255"
+          - "permit 10.3.0.0 0.0.0.255"
+          - "permit 10.4.0.0 0.0.0.255"
+          - "permit 10.6.0.0 0.0.0.255"
+    
+    - name: 'Configure PAT'
+      cisco.ios.ios_config:
+        lines:
+          - "ip nat pool POOL1 203.0.113.201 203.0.113.206 netmask 255.255.255.248"
+          - "ip nat inside source list 2 pool POOL1 overload"
+    
+    - name: 'Configure NAT interfaces'
+      cisco.ios.ios_config:
+        parents:
+          - "interface {{ item.interface }}"
+        lines:
+          - "ip nat {{ item.location }}"
+      loop:
+        - interface: "GigabitEthernet0/1"
+          location: "inside"
+        - interface: "GigabitEthernet0/2"
+          location: "inside"
+        - interface: "GigabitEthernet0/3"
+          location: "outside"
+
+    - name: 'Configure Static NAT for SRV1'
+      cisco.ios.ios_config:
+        lines:
+          - "ip nat inside source static 10.5.0.4 203.0.113.113"

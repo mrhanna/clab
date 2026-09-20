@@ -17,14 +17,19 @@ all:
         access_siteB:
         distribution_siteB:
     all_routers_switches:
-      vars:
-        ansible_connection: ansible.netcommon.network_cli
-        ansible_network_os: arista.eos.eos
-        ansible_become: true
-        ansible_become_method: enable
       hosts:
         clab-mega-R1:
       children:
         core_switches:
         all_distribution_switches:
         all_access_switches:
+    all_arista:
+      vars:
+        ansible_connection: ansible.netcommon.network_cli
+        ansible_network_os: arista.eos.eos
+        ansible_become: true
+        ansible_become_method: enable
+      children:
+        all_distribution_switches:
+        all_access_switches:
+        core_switches:

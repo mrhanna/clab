@@ -1,0 +1,5 @@
+globals:
+  dns_server: "10.5.0.4"
+  syslog_server: "10.5.0.4"
+  dhcp_server: "10.0.0.76"
+  ntp_server: "10.0.0.76"
