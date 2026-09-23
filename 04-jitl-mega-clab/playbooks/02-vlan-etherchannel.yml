@@ -70,10 +70,11 @@
               native_vlan: 1000
 
     - name: 'Configure Voice VLANs on Access Ports'
-      ansible.netcommon.cli_config:
-        config: |
-          {% for voice in voice_vlan %}
-          interface {{ voice.name }}
-            switchport phone vlan {{ voice.vlan }}
-          {% endfor %}
-      when: voice_vlan is defined
+      arista.eos.eos_config:
+        parents:
+          - interface {{ item.name }}
+        lines:
+          - switchport phone vlan {{ item.vlan }}
+          - switchport trunk native vlan {{ l2_interfaces | selectattr('name', 'equalto', item.name) | map(attribute='access.vlan') | first }}
+          - switchport mode trunk phone
+      loop: '{{ voice_vlan | default([]) }}'

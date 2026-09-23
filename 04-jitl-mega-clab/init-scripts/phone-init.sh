@@ -13,7 +13,7 @@ ip link set br0 up
 
 # Add VLAN 20 to the bridge and to Eth1 (Voice VLAN)
 bridge vlan add dev eth1 vid 20
-bridge vlan add dev br0 vid 20
+bridge vlan add dev br0 vid 20 self
 
 # Create the phone interface with VLAN 20
 ip link add link br0 name phone0 type vlan id 20

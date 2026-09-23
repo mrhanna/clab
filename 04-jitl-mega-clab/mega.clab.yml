@@ -81,18 +81,21 @@ topology:
       exec:
         - apk add --no-cache iproute2 dhcpcd
         - rm -f /bin/ip
+        - dhcpcd eth1
     PC2:
       kind: linux
       image: alpine:latest
       exec:
         - apk add --no-cache iproute2 dhcpcd bash
         - rm -f /bin/ip
+        - dhcpcd eth1
     PC3:
       kind: linux
       image: alpine:latest
       exec:
         - apk add --no-cache iproute2 dhcpcd bash
         - rm -f /bin/ip
+        - dhcpcd eth1
     SRV1:
       kind: linux
       image: alpine:latest
