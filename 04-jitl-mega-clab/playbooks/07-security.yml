@@ -1,0 +1,57 @@
+# Part 7 – Security: ACLs and Layer-2 Security Features
+
+- name: 'ACL OfficeA to Office B'
+  hosts: distribution_siteA
+  gather_facts: false
+  tasks:
+    - name: 'Configure ACL on dist switches to block traffic from OfficeA PCs to OfficeB PCs (except ICMP), and allow all other traffic'
+      arista.eos.eos_acls:
+        state: merged
+        config:
+          - afi: ipv4
+            acls:
+              - name: OfficeA_to_OfficeB
+                standard: false
+                aces:
+                  - grant: permit
+                    protocol: icmp
+                    source:
+                      subnet_address: 10.1.0.0/24
+                    destination:
+                      subnet_address: 10.3.0.0/24
+                  - grant: deny
+                    protocol: ip
+                    source:
+                      subnet_address: 10.1.0.0/24
+                    destination:
+                      subnet_address: 10.3.0.0/24
+                  - grant: permit
+                    protocol: ip
+                    source:
+                      any: true
+                    destination:
+                      any: true
+
+    - name: 'Apply ACL to dist switches'
+      arista.eos.eos_acl_interfaces:
+        state: merged
+        config:
+          - name: Vlan10
+            access_groups:
+              - afi: ipv4
+                acls:
+                  - name: OfficeA_to_OfficeB
+                    direction: in
+
+- name: 'Configure Port-Security on access ports'
+  hosts: all_access_switches
+  gather_facts: false
+  tasks:
+    - name: 'Configure Port-Security on access ports'
+      arista.eos.eos_config:
+        lines:
+          - switchport port-security mac-address maximum {{ 2 if (item.name in (voice_vlan | default([]) | map(attribute='name') | list)) else 1 }}
+          - switchport port-security violation protect
+        parents:
+          - interface {{ item.name }}
+      loop: '{{ l2_interfaces | default([]) }}'
